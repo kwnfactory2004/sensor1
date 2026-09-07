@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>センサ基礎① - クイズ</title>
+    <!-- Tailwind CSSの読み込みとテーマカスタマイズ -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'deep-green': '#064e3b', /* ディープグリーン (エメラルド系の暗色) */
+                        'deep-green-light': '#047857',
+                        'deep-green-dark': '#022c22'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- React, ReactDOM, Babelの読み込み -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // 全20問の問題データを定義します
+        const rawQuestions = [
+            {
+                title: "〔No. 1〕 センサの基礎知識",
+                question: "センサに関する記述として、不適切なものは次のうちどれか。",
+                correct: "絶対圧検出型のバキューム・センサ（圧力センサ）は、基準室に大気圧を用いており、インテーク・マニホールド内に発生した圧力をシリコン・チップ（ピエゾ抵抗効果素子）に作用させ、シリコン・チップの電気抵抗の変化を電圧の変化に置き換えてセンサ信号電圧としている。",
+                incorrect: [
+                    "ノック・センサ内の振動板上には圧電素子が組み付けられており、この圧電素子には電極が設けられ、一方の電極は出力ターミナルに、他方の電極はノック・センサ・ボデーに接続されている。",
+                    "ジルコニア素子を用いたO2センサは、円筒状のジルコニア素子の内外面に白金をコーティングしてあり、内側は大気と、外側は排気ガスと接触できるようになっている。ジルコニア素子は、活性化領域（例: 360℃）を超えたとき、大気側と排気ガス側の酸素濃度差により、起電力を発生させる性質がある。",
+                    "熱線式エア・フロー・メータに用いられる発熱抵抗体において、吸入空気量が多いほど、発熱抵抗体の放熱が多く、抵抗が小さいために回路（発熱抵抗体）の電流は多くなり、この電流の変化を電圧の変化に置き換えて吸入空気量信号としている。"
+                ],
+                explanation: "絶対圧検出型のバキューム・センサ（圧力センサ）は、基準室に「大気圧」ではなく「真空」を用いており、インテーク・マニホールド内に発生した圧力をシリコン・チップ（ピエゾ抵抗効果素子）に作用させ、センサ信号電圧としているため、(3)の記述は不適切である。他の選択肢の記述はすべて適切である。"
+            },
+            {
+                title: "〔No. 2〕 水温センサおよびエア・フロー・メータ回路の異常検知範囲",
+                question: "図1に示す水温センサ回路と図2に示す熱線式エア・フロー・メータ回路の異常検知範囲（イ）〜（ハ）の組み合わせとして、適切なものは次のうちどれか。\nただし、熱線式エア・フロー・メータ回路では、ソフトウェアの使用により運転条件を設定（運転モードに閾値を設定）していないものとする。\n\n・（イ）：常時（IG・ONから作動中）、上限値超および下限値未満を「異常検知可能範囲」とする。\n・（ハ）：作動中においてのみ、下限値未満を「異常検知可能範囲」とする。",
+                correct: "水温センサ回路: （イ） / 熱線式エア・フロー・メータ回路: （ハ）",
+                incorrect: [
+                    "水温センサ回路: （イ） / 熱線式エア・フロー・メータ回路: （イ）",
+                    "水温センサ回路: （口） / 熱線式エア・フロー・メータ回路: （ハ）",
+                    "水温センサ回路: （ハ） / 熱線式エア・フロー・メータ回路: （イ）"
+                ],
+                explanation: "水温センサ回路の異常検知範囲には、常時上限値と下限値の外側を検知可能な（イ）が適用される。一方、運転条件を設定していない熱線式エア・フロー・メータ回路では、作動中において下限値未満を検知可能とする（ハ）が適用されるため、適切な組み合わせは(4)である。"
+            },
+            {
+                title: "〔No. 3〕 油温センサ回路の点検",
+                question: "図1に示す温度抵抗特性（20℃で2.5kΩ、80℃で0.3kΩ）をもつ図2の油温センサ回路（ECU内部5V電源、1.5kΩのプルアップ抵抗および1.5kΩのアース側抵抗を配置）の点検に関する記述として、不適切なものは次のうちどれか。ただし、配線等の抵抗はないものとする。",
+                correct: "正常時のV3は、油温20℃のときに約1.92Vになる。",
+                incorrect: [
+                    "油温が80℃で、コネクタⒶの③〜④端子（信号線）間に0.5kΩの接触抵抗が発生している場合、V3は約1.29Vになる。",
+                    "油温が80℃で、コネクタⒷの⑦〜⑧端子（アース線）間に0.7kΩの接触抵抗が発生している場合、V2は約1.42Vになる。",
+                    "油温が20℃で、コネクタⒷの⑤〜⑥端子（信号線）間に0.5kΩの接触抵抗が発生している場合、V1は約1.66Vになる。"
+                ],
+                explanation: "正常時、油温20℃における油温センサの抵抗値は2.5kΩである。このときの回路の全抵抗値は、ECU内プルアップ抵抗（1.5kΩ）＋センサ抵抗（2.5kΩ）＋アース側抵抗（1.5kΩ）＝5.5kΩとなる。したがって、アース側抵抗（1.5kΩ）の上流電圧であるV3の正常値は、5V × 1.5kΩ / 5.5kΩ ≒ 1.36Vとなるため、(4)の記述は不適切である。"
+            },
+            {
+                title: "〔No. 4〕 ノック・センサ回路の異常検知範囲",
+                question: "図1の信号電圧特性（アイドリング時から6000 min⁻¹にかけて一定の電圧幅をもつノイズ信号）をもつ図2のノック・センサ回路の異常検知範囲を示したものとして、適切なものは次のうちどれか。",
+                correct: "0Vから閾値（下限値）以下を「異常検知可能範囲」とし、アイドリングから6000 min⁻¹にわたる正常信号領域を「異常検知不可（正常判定）範囲」とする。",
+                incorrect: [
+                    "5Vから閾値（上限値）以上を「異常検知可能範囲」とし、下限値以下を「異常検知不可範囲」とする。",
+                    "アイドリング時にのみ「異常検知可能範囲」を設け、高回転時はすべて「異常検知不可範囲」とする。",
+                    "上限値と下限値の間をすべて「異常検知可能範囲」とする。"
+                ],
+                explanation: "ノック・センサは正常作動時にエンジンの振動成分に応じた起電力を発生しているため、信号電圧が断線や短絡等によって下限値（閾値）以下（0V付近）に低下した状態を検知して異常と判定する。したがって、(1)の特性が適切である。"
+            },
+            {
+                title: "〔No. 5〕 バキューム・センサ（圧力センサ）回路の異常検知",
+                question: "図1に示す圧力電圧特性をもつバキューム・センサ（圧力センサ）を用いた図2の回路（信号線がECU内部で抵抗Rを介して5Vにプルアップされている）の異常検知に関する記述として、適切なものは次のうちどれか。",
+                correct: "信号アース線（③の箇所）で断線があるときは、入力回路には5V安定化電源回路から抵抗（R）を経由した電圧が入力されるため、マイコンは上限値の閾値をアップ・エッジする信号電圧を検出して異常検知を行う。",
+                incorrect: [
+                    "電源線（①の箇所）で断線があるときは、入力回路に0Vが入力されるため、マイコンは下限値の閾値をダウン・エッジする信号電圧を検出して異常検知を行う。",
+                    "信号線（②の箇所）で断線があるときは、入力回路に0Vが入力されるため、マイコンは下限値の閾値をダウン・エッジする信号電圧を検出して異常検知を行う。",
+                    "②の箇所でボデー間と短絡（地絡）があるときは、入力回路には5V安定化電源回路から抵抗（R）を経由した電圧が入力されるため、マイコンは上限値の閾値をアップ・エッジする信号電圧を検出して異常検知を行う。"
+                ],
+                explanation: "信号アース線（③）が断線した場合、センサに電流が流れなくなるため、信号線電圧はECU内部のプルアップ抵抗（R）を介して5V安定化電源電圧（5V）付近まで上昇する。したがって、マイコンは上限値の閾値をアップ・エッジする信号電圧を検出して異常検知を行うため、(3)が適切である。他の選択肢は断線や短絡時における入力電圧の挙動が誤っている。"
+            },
+            {
+                title: "〔No. 6〕 光学素子式センサ回路の点検",
+                question: "クランク角センサなどに用いられている、図1の信号電圧特性をもつ図2の光学素子式センサ回路に関する記述として、適切なものは次のうちどれか。",
+                correct: "ロータを回転させたとき、V1とV2に規定の信号電圧が発生し、かつ、等しければ、信号線と信号アース線は正常だと考えられる。V1とV2の電圧値が異なる場合、信号線の断線及び信号アース線の断線が考えられるが、電源線の断線は考えられない。",
+                incorrect: [
+                    "ロータを回転させたとき、V3とV4に規定の信号電圧が発生し、かつ、等しければ、信号線は正常だと考えられる。V3とV4の電圧値が異なる場合、信号線の断線が考えられるが、信号線の接触抵抗の増大は考えられない。",
+                    "ロータを回転させたとき、V5とV6の電圧値が異なる場合は、信号アース線の断線が考えられるが、信号アース線の接触抵抗の増大は考えられない。",
+                    "ロータを回転させたとき、V1に規定の信号電圧が発生しない場合は、光学素子式センサの異常、電源線の断線、電源線の短絡（地絡）及びエンジンECU本体の異常が考えられるが、信号線の短絡（地絡）は考えられない。"
+                ],
+                explanation: "V1とV2の電圧値が異なる場合、信号線や信号アース線の断線が考えられるが、電源線が断線した場合は双方とも電圧が発生しなくなるため、電源線の断線は考えられないことから、(2)の記述は適切である。(1)および(3)は「接触抵抗の増大」も考えられるため不適切であり、(4)は信号線の短絡（地絡）によってもV1に電圧が発生しなくなるため不適切である。"
+            },
+            {
+                title: "〔No. 7〕 スロットル・ポジション・センサ回路の点検",
+                question: "スロットル・ポジション・センサが図に示す状態（端子①〜③間3.80kΩ、③〜⑤間6.20kΩ）にある場合、この回路の点検に関する記述として、不適切なものは次のうちどれか。ただし、配線等の抵抗はないものとし、コネクタⒶとコネクタⒷはそれぞれ接続状態とする。",
+                correct: "コネクタⒷの⑪〜⑫端子（電源線）間に1.30kΩの接触抵抗が発生している場合、エンジンECUの入力回路には、3.75Vの信号電圧が入力される。",
+                incorrect: [
+                    "エンジンECUの入力回路には、3.10Vの信号電圧が入力される。",
+                    "コネクタⒷの⑨〜⑩端子（信号アース線）間に0.25kΩの接触抵抗が発生している場合、アース電位の浮きにより、エンジンECUの入力回路には正常時より高い信号電圧が入力される。",
+                    "コネクタⒶの⑤〜⑥端子（信号アース線側）間に0.50kΩの接触抵抗が発生している場合、エンジンECUの入力回路には、約3.19Vの信号電圧が入力される。"
+                ],
+                explanation: "電源線（⑪〜⑫端子）間に1.30kΩの接触抵抗が発生した場合、回路全体の抵抗値は 10.00kΩ ＋ 1.30kΩ ＝ 11.30kΩとなる。このときエンジンECUの入力回路に入力される信号電圧は、5V × 6.20kΩ / 11.30kΩ ≒ 2.74Vとなるため、3.75Vとする(3)の記述は不適切である。"
+            },
+            {
+                title: "〔No. 8〕 O2センサ信号電圧による故障診断",
+                question: "Lジェトロニック方式エンジンの不具合点検において、暖機後無負荷アイドリング状態におけるO2センサ信号電圧の点検結果と故障診断に関する記述として、適切なものは次のうちどれか。",
+                correct: "O2センサ信号電圧が1V付近で一定の場合、「エア・フロー・メータの信号電圧のHi側への特性ずれ」が考えられ、「エア・フロー・メータのアース線の接触抵抗増大」も考えられる。",
+                incorrect: [
+                    "O2センサ信号電圧が0V付近で一定の場合、「プレッシャ・レギュレータ不良による燃圧の低下」は考えられるが、「エア・フロー・メータの信号線の接触抵抗増大」は考えられない。",
+                    "O2センサ信号電圧が0V付近で一定の場合、「水温センサの信号電圧のHi側への特性ずれ」は考えられるが、「水温センサのアース線の接触抵抗増大」は考えられない。",
+                    "O2センサ信号電圧が1V付近で一定の場合、「プレッシャ・レギュレータのダイヤフラムの破れ」が考えられ、「フューエル・ポンプのフィルタの詰まり」も考えられる。"
+                ],
+                explanation: "O2センサ信号電圧が1V付近で一定（リッチ状態）の場合、エア・フロー・メータの信号電圧がHi側にずれているか、アース線の接触抵抗増大によって信号電圧が相対的に上昇している（ECUが吸入空気量大と誤判定して増量している）ことが考えられるため、(2)の記述は適切である。"
+            },
+            {
+                title: "〔No. 9〕 バキューム・センサ回路の故障診断",
+                question: "図1に示す特性をもつ図2のバキューム・センサ回路の外部診断器を用いた故障診断に関する記述として、不適切なものは次のうちどれか。",
+                correct: "外部診断器の表示が145kPaのときに、コネクタⒶを外してコネクタⒷの端子⑨と端子⑪間を短絡させても表示が145kPaのまま変化しない場合、電源線、信号線及び信号アース線の不良は考えられない。",
+                incorrect: [
+                    "外部診断器の表示が0kPaのときに、コネクタⒶを外すと表示が145 kPaに変化する場合、電源線、信号線及び信号アース線の不良は考えられないが、バキューム・センサの不良は考えられる。",
+                    "外部診断器の表示が0kPaのときに、コネクタⒶとコネクタⒷを外しても表示が0kPaのまま変化しない場合、電源線の不良は考えられないが、エンジンECUの不良は考えられる。",
+                    "外部診断器の表示が145kPaのときに、コネクタⒶを外して端子④と端子⑥間を短絡させると表示が0kPaに変化する場合、バキューム・センサの不良は考えられないが、エンジンECUアース線の不良は考えられる。"
+                ],
+                explanation: "コネクタⒶを外して、さらにコネクタⒷの信号線（端子⑨）と信号アース線（端子⑪）間を短絡させても外部診断器の表示が145kPa（断線表示）のまま変化しない場合、コネクタⒷからECUまでの信号線の断線、あるいはECU本体の不良などが考えられる。したがって、「電源線、信号線及び信号アース線の不良は考えられない」とする(2)の記述は不適切である。"
+            },
+            {
+                title: "〔No. 10〕 水温センサ系統の故障診断",
+                question: "水温センサ系統の故障診断において、外部診断器を用いた故障診断に関する記述として、適切なものは次のうちどれか。\nなお、水温センサ回路における断線時の表示値は「-40℃」、短絡（地絡）時の表示値は「140℃」とする。",
+                correct: "外部診断器の水温表示が「140℃」で、コネクタⒶを外したときに表示が変化せず、コネクタⒷを外したときに表示が「-40℃」に変化した場合、信号線の短絡（地絡）は考えられるが、アース線の断線は考えられない。",
+                incorrect: [
+                    "外部診断器の水温表示が「-40℃」で、コネクタⒶを外して端子②と端子④を短絡させたときに表示が「-40℃」のまま変化しなかった場合、水温センサの断線は考えられるが、信号線やアース線の断線は考えられない。",
+                    "外部診断器の水温表示が「-40℃」で、コネクタⒶを外したときに表示が変化せず、コネクタⒷを接続した状態で端子⑤と端子⑦を短絡させたときに表示が「140℃」に変化した場合、信号線とアース線との線間短絡は考えられるが、エンジンECUの不良は考えられない。",
+                    "外部診断器の水温表示が「140℃」で、コネクタⒶを外したときに表示が「-40℃」に変化した場合、水温センサの内部短絡は考えられるが、コネクタⒶ内の端子②と端子④の短絡は考えられない。"
+                ],
+                explanation: "センサ側コネクタⒶを外しても140℃（短絡値）のままで、ECU側コネクタⒷを外すと-40℃（断線値）に変化したということは、コネクタⒶ〜Ⓑ間の信号線がボデー等と短絡（地絡）していることが考えられるため、(2)の記述は適切である。"
+            },
+            {
+                title: "〔No. 11〕 半導体式油圧センサ回路の異常検知",
+                question: "図1に示す異常検知範囲（上限値5V、下限値0V）をもつ図2の半導体式油圧センサ回路（信号線がECU内部で抵抗Rを介して5Vにプルアップされている）の異常検知に関する記述として、適切なものは次のうちどれか。",
+                correct: "電源線（①の箇所）で断線が発生した場合、半導体式油圧センサは起動しないが、入力回路には5V安定化電源回路から抵抗（R）を経由した信号電圧5Vが入力されるため、マイコンは上限値の閾値をアップ・エッジする信号電圧を検出して異常検知を行う。",
+                incorrect: [
+                    "センサ内部（信号線系統）で断線が発生した場合、入力回路に0Vが入力されるため、マイコンは下限値の閾値をダウン・エッジする信号電圧を検出して異常検知を行う。",
+                    "アース線（③の箇所）で断線が発生した場合、半導体式油圧センサが起動せず、入力回路に0Vが入力されるため、マイコンは下限値の閾値をダウン・エッジする信号電圧を検出して異常検知を行う。",
+                    "信号線（②の箇所）でボデーとの短絡（地絡）が発生した場合、入力回路に5Vが入力されるため、マイコンは上限値の閾値をアップ・エッジする信号電圧を検出して異常検知を行う。"
+                ],
+                explanation: "電源線（①）が断線するとセンサは作動しなくなるが、信号線はECU内部のプルアップ抵抗（R）を介して5Vに引っ張られるため、入力回路には5Vが入力される。したがって、マイコンは上限値の閾値をアップ・エッジする信号電圧を検出して異常検知を行うため、(4)が適切である。他の選択肢はいずれも異常発生時の信号電圧挙動の記述が不適切である。"
+            },
+            {
+                title: "〔No. 12〕 機械式油圧センサ回路の異常検知範囲",
+                question: "機械式油圧センサ回路（信号線が抵抗Rを介してアースにプルダウンされている回路）における、マイコンの異常検知範囲に関する記述として、適切なものは次のうちどれか。",
+                correct: "常時、上限値以上および下限値以下を異常検知可能範囲とするが、下限値以下については「作動中（IGスイッチON）」にのみ異常検知可能とする。",
+                incorrect: [
+                    "下限値以下のみを異常検知可能範囲とし、上限値以上は異常検知不可範囲とする。",
+                    "上限値以上のみを異常検知可能範囲とし、下限値以下は異常検知不可範囲とする。",
+                    "常時、上限値以上および下限値以下を異常検知可能範囲とするが、上限値以上については「作動中（IGスイッチON）」にのみ異常検知可能とする。"
+                ],
+                explanation: "プルダウン抵抗（R）が配置された機械式油圧センサ回路では、異常によるパルス消失や断線で信号が0V（下限値以下）になったとき、および電源短絡等で5V（上限値以上）に固着したときに異常を検知する。このうち、下限値以下（0V）の検知は「作動中（IGスイッチON）」にのみ作動するため、(3)の記述が適切である。"
+            },
+            {
+                title: "〔No. 13〕 カム角センサ回路の故障診断",
+                question: "カム角センサ系統の異常を検出している自動車において、正常時にパルス波形を出力するカム角センサ回路の故障診断に関する記述として、不適切なものは次のうちどれか。",
+                correct: "クランキング時の端子②と端子④間において、0V一定の信号電圧波形が測定できた場合は、カム角センサ本体の不良のみが考えられ、信号線の断線や短絡は考えられない。",
+                incorrect: [
+                    "クランキング時の端子②と端子④間において、0V一定の信号電圧波形が測定できた場合は、信号線の断線、短絡（地絡）のほか、カム角センサ本体の不良が考えられる。",
+                    "クランキング時の端子⑤と端子⑦間において、0V一定の信号電圧波形が測定でき、コネクタⒶを外したときの端子①と端子③間において、正常なパルス信号電圧波形が測定できた場合は、エンジンECU本体の不良が考えられるが、信号線の断線、カム角センサ本体の不良は考えられない。",
+                    "クランキング時の端子⑤と端子⑦間において、コネクタⒷを外したときに正常なパルス信号電圧波形が測定できた場合は、エンジンECU本体の不良、コネクタⒷ内での端子⑥と端子⑧間の短絡が考えられるが、カム角センサ本体の不良、信号線の断線、信号線の短絡（地絡）は考えられない。"
+                ],
+                explanation: "クランキング時に0V一定の波形しか測定できない場合、カム角センサ本体の不良のほかに、信号線の断線、短絡（地絡）なども考えられるため、(4)の「考えられない」とする記述は不適切である。"
+            },
+            {
+                title: "〔No. 14〕 熱線式エア・フロー・メータの特性",
+                question: "熱線式エア・フロー・メータに用いられる発熱抵抗体を用いた吸入空気量検出に関する記述として、不適切なものは次のうちどれか。",
+                correct: "吸入空気量が多いほど、発熱抵抗体の放熱が少なく、抵抗が大きいために回路の電流は少なくなる。",
+                incorrect: [
+                    "吸入空気量が多いほど、空気の流れによって発熱抵抗体から奪われる放熱量が多くなる。",
+                    "吸入空気量が多いほど、放熱によって発熱抵抗体の温度が低下するため、これを一定温度に保つよう回路に流れる電流は多くなる。",
+                    "回路（発熱抵抗体）に流れる電流の変化を電圧の変化に置き換えて、吸気量信号としている。"
+                ],
+                explanation: "吸入空気量が多いほど、発熱抵抗体の放熱は多くなり、温度を一定に保つための電流は多くなる。したがって、放熱が少なく電流が少なくなるとする(4)の記述は不適切である。"
+            },
+            {
+                title: "〔No. 15〕 スロットル・ポジション・センサ系統の故障診断（電圧点検）",
+                question: "ダイアグノーシス・コードを点検したところ、スロットル・ポジション・センサ系統の異常を示すコードを表示した。図1および図2に示す回路において、下記の点検結果から考えられる不具合原因として、適切なものは次のうちどれか。\n正常時のスロットル・ポジション・センサの信号電圧は、スロットル・バルブ全閉時0.5V、全開時4.5Vとする。\n\n・図1（すべての回路が接続された状態での測定）：V1の電圧が5V、V2の電圧がスロットル・バルブ全閉時、全開時ともに5V、V3の電圧が0Vであった。\n・図2（センサ信号線を外した状態での測定）：V4の電圧がスロットル・バルブ全閉時、全開時ともに5V、V5の電圧が0Vであった。",
+                correct: "センサ・アース線の断線",
+                incorrect: [
+                    "センサ電源線からセンサ信号線への短絡",
+                    "AT ECU内のアース系統の不良",
+                    "スロットル・ポジション・センサ内のアース系統の不良"
+                ],
+                explanation: "センサ信号線を切り離した状態（図2）でも、センサ側端子V4の電圧がスロットル開度にかかわらず5V（電源電圧）一定となっている。これはセンサ内部の抵抗体にアース電流が流れていない（分圧されていない）ことを示しているため、不具合原因として「センサ・アース線の断線」が考えられ、(1)が適切である。"
+            },
+            {
+                title: "〔No. 16〕 スロットル・ポジション・センサの信号特性と外部診断器データ",
+                question: "図1の信号特性をもつ図2のスロットル・ポジション・センサ回路において、外部診断器を用いた故障診断に関する記述として、適切なものは次のうちどれか。",
+                correct: "外部診断器のスロットル開度データが0%（全閉表示）の状態で固着している場合、信号線（②の箇所）の断線、および信号線の短絡（地絡）の両方が考えられる。",
+                incorrect: [
+                    "外部診断器のスロットル開度データ（ECUデータ）が100%（全開表示）の状態で固着している場合、信号アース線（③の箇所）の断線、および信号アース線の短絡（地絡）の両方が考えられる。",
+                    "外部診断器のスロットル開度データが100%の場合、電源線（①）と信号線（②）の線間短絡は考えられるが、電源線（①）と信号アース線（③）の線間短絡も考えられる。",
+                    "外部診断器のスロットル開度データが0%の場合、電源線（①）の断線のみが考えられ、信号線の断線は考えられない。"
+                ],
+                explanation: "(2)が適切である。信号線（②）が断線した場合、あるいは信号線がボデー等に短絡（地絡）した場合、いずれもマイコンへの入力電圧は0Vとなるため、外部診断器のスロットル開度データは0%となる。信号アース線が地絡した場合は信号電圧が下がり0%に近づくため、(1)の記述は不適切である。"
+            },
+            {
+                title: "〔No. 17〕 吸気温センサ系統の故障診断",
+                question: "外部診断器で「吸気温センサ系統」の異常を表示した。図をもとに外部診断器を用いて故障診断を行った結果として、適切なものは次のうちどれか。\nなお、吸気温センサの断線時表示値は「-40℃」、短絡時表示値は「140℃」とする。\n\n・点検結果 1：センサ側コネクタⒶを外して、外部診断器の表示は140℃のままであった。\n・点検結果 2：ECU側コネクタⒷを外して、外部診断器の表示が-40℃に変化した。\n・点検結果 3：コネクタⒶとⒷを外して、信号線（⑤）とボデー間の導通が∞であった。",
+                correct: "信号線とアース線の線間短絡",
+                incorrect: [
+                    "吸気温センサの内部短絡",
+                    "エンジンECUの不良",
+                    "アース線の断線"
+                ],
+                explanation: "センサ側コネクタⒶを外しても140℃（短絡値）のままであるためセンサ内部短絡ではなく、ECU側コネクタⒷを外すと-40℃（断線値）に変化するためECU内部の不良でもない。さらに信号線（⑤）とボデー間の導通がないため信号線の地絡でもない。したがって、コネクタⒶ〜Ⓑ間のハーネス内で信号線とアース線がショートしている「信号線とアース線の線間短絡」が考えられ、(2)が適切である。"
+            },
+            {
+                title: "〔No. 18〕 インクリメンタル・エンコーダ式スロットル・ポジション・センサの異常検知範囲",
+                question: "図に示すインクリメンタル・エンコーダ式のスロットル・ポジション・センサ回路において、マイコンが異常検知できる範囲を示したものとして、適切なものは次のうちどれか。",
+                correct: "常時、上限値以上および下限値以下を「異常検知可能範囲」とする。",
+                incorrect: [
+                    "下限値以下のみを「異常検知可能範囲」とし、上限値以上は「異常検知不可範囲」とする。",
+                    "上限値以上のみを「異常検知可能範囲」とし、下限値以下は「異常検知不可範囲」とする。",
+                    "下限値以下を「異常検知可能範囲」とし、上限値以上も「異常検知可能範囲」とするが、下限値以下については「作動中（IGスイッチON）」にのみ異常検知可能とする。"
+                ],
+                explanation: "デジタルパルス信号を出力するインクリメンタル・エンコーダ式のスロットル・ポジション・センサ回路では、信号が0V（下限値以下）に固着した場合、あるいは電源短絡等で5V（上限値以上）に固着した場合に異常を検知する。これらは常時検知可能であるため、(1)の特性が適切である。"
+            },
+            {
+                title: "〔No. 19〕 サーミスタ（負の温度係数）の温度特性",
+                question: "エンジン制御に用いられる温度センサ（水温、吸気温、油温等）の感温素子として広く使用されているサーミスタ（NTC: 負の温度係数）に関する記述として、不適切なものは次のうちどれか。",
+                correct: "サーミスタは、温度変化に比例して電気抵抗値は一定であり、素子自体がひずむことで抵抗変化を発生させるピエゾ抵抗効果を利用している。",
+                incorrect: [
+                    "サーミスタは、温度が低くなるに従って電気抵抗値が大きくなる特性をもっている。",
+                    "サーミスタは、温度が高くなるに従って電気抵抗値が小さくなる特性をもっている。",
+                    "正常な油温センサ（サーミスタ）回路において、油温が20℃のときのセンサ抵抗値は2.5kΩであり、油温が80℃のときのセンサ抵抗値は0.3kΩである。"
+                ],
+                explanation: "サーミスタ（NTC）は温度変化に伴って電気抵抗値が大きく変化する半導体素子である。温度変化に対して抵抗値が一定で、ひずみによるピエゾ抵抗効果を利用するのはバキューム・センサ等の圧力センサ用シリコン・チップであるため、(3)の記述は不適切である。"
+            },
+            {
+                title: "〔No. 20〕 O2センサのジルコニア素子",
+                question: "ジルコニア素子を用いたO2センサの構造および起電力特性に関する記述として、不適切なものは次のうちどれか。",
+                correct: "ジルコニア素子は、大気側と排気ガス側の酸素濃度差が全くない状態のときに、最大の起電力（約1V）を発生させる性質がある。",
+                incorrect: [
+                    "円筒状のジルコニア素子の内外面に白金をコーティングしてある。",
+                    "円筒状のジルコニア素子の内側は大気と、外側は排気ガスと接触できるようになっている。",
+                    "ジルコニア素子は、活性化領域（例: 360℃）を超えたとき、大気側と排気ガス側の酸素濃度差により、起電力を発生させる性質がある。"
+                ],
+                explanation: "ジルコニア素子は、大気側（酸素濃度大）と排気ガス側（酸素濃度小）の「酸素濃度差」によって起電力を発生させる。排気ガスがリッチ（酸素濃度が極めて低い）で酸素濃度差が最大となったときに約1Vの起電力を発生し、濃度差がない状態では起電力は発生しない（0V付近）ため、(4)の記述は不適切である。"
+            }
+        ];
+
+        // 配列をシャッフルする関数
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // SVG アイコンコンポーネント
+        const CheckIcon = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        );
+
+        const XIcon = ({ className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        );
+
+        const App = () => {
+            const [step, setStep] = React.useState('start'); // start, quiz, result
+            const [questions, setQuestions] = React.useState([]);
+            const [currentIndex, setCurrentIndex] = React.useState(0);
+            const [answers, setAnswers] = React.useState([]);
+
+            // クイズ開始処理
+            const startGame = () => {
+                const preparedQuestions = rawQuestions.map(q => {
+                    // 選択肢の(1)(2)などのプレフィックスを取り除く
+                    const cleanCorrect = q.correct.replace(/^\(\d+\)\s*/, '');
+                    const cleanIncorrect = q.incorrect.map(i => i.replace(/^\(\d+\)\s*/, ''));
+                    // 選択肢をシャッフル
+                    const options = shuffleArray([cleanCorrect, ...cleanIncorrect]);
+                    
+                    return {
+                        ...q,
+                        cleanCorrect,
+                        options
+                    };
+                });
+                
+                setQuestions(preparedQuestions);
+                setCurrentIndex(0);
+                setAnswers([]);
+                setStep('quiz');
+            };
+
+            // 回答選択時の処理
+            const handleAnswer = (selectedOption) => {
+                const q = questions[currentIndex];
+                const isCorrect = selectedOption === q.cleanCorrect;
+                
+                const newAnswers = [...answers, {
+                    questionTitle: q.title,
+                    questionText: q.question,
+                    selected: selectedOption,
+                    correct: q.cleanCorrect,
+                    isCorrect,
+                    explanation: q.explanation
+                }];
+                
+                setAnswers(newAnswers);
+
+                if (currentIndex + 1 < questions.length) {
+                    setCurrentIndex(currentIndex + 1);
+                } else {
+                    setStep('result');
+                }
+            };
+
+            const resetGame = () => {
+                setStep('start');
+            };
+
+            if (step === 'start') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+                        <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center border-t-4 border-deep-green">
+                            <h1 className="text-3xl font-bold text-deep-green mb-4">センサ基礎①</h1>
+                            <p className="text-gray-600 mb-8 leading-relaxed">
+                                全20問の選択問題です。<br/>
+                                8割（16問）以上の正解で合格となります。<br/>
+                                準備ができたらスタートしてください。
+                            </p>
+                            <button 
+                                onClick={startGame}
+                                className="w-full bg-deep-green text-white font-bold py-4 px-8 rounded-xl shadow hover:bg-deep-green-light transition duration-200"
+                            >
+                                クイズをスタート
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'quiz') {
+                const q = questions[currentIndex];
+                const progressPercentage = ((currentIndex) / questions.length) * 100;
+
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 bg-gray-50">
+                        <div className="w-full max-w-2xl">
+                            {/* プログレスバー */}
+                            <div className="mb-6">
+                                <div className="flex justify-between text-sm font-bold text-deep-green mb-2">
+                                    <span>問題 {currentIndex + 1} / {questions.length}</span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div className="bg-deep-green h-2.5 rounded-full transition-all duration-300" style={{ width: `${progressPercentage}%` }}></div>
+                                </div>
+                            </div>
+
+                            {/* 問題エリア */}
+                            <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md mb-6">
+                                <h2 className="text-xl font-bold text-deep-green mb-4 border-b pb-2">{q.title}</h2>
+                                <p className="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{q.question}</p>
+                            </div>
+
+                            {/* 選択肢エリア */}
+                            <div className="space-y-3">
+                                {q.options.map((option, idx) => (
+                                    <button 
+                                        key={idx}
+                                        onClick={() => handleAnswer(option)}
+                                        className="w-full text-left p-4 sm:p-5 rounded-xl border-2 border-gray-100 bg-white shadow-sm hover:border-deep-green hover:bg-green-50 transition duration-150 group"
+                                    >
+                                        <div className="flex items-start">
+                                            <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 font-bold mr-4 group-hover:bg-deep-green group-hover:text-white transition">
+                                                {idx + 1}
+                                            </span>
+                                            <span className="text-gray-700 leading-relaxed mt-1">{option}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (step === 'result') {
+                const correctCount = answers.filter(a => a.isCorrect).length;
+                const isPassed = correctCount >= 16; // 8割(16問)以上で合格
+
+                return (
+                    <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 bg-gray-50">
+                        <div className="w-full max-w-3xl">
+                            
+                            {/* スコア・合否結果ヘッダー */}
+                            <div className="bg-white p-8 rounded-2xl shadow-lg mb-8 text-center">
+                                <h2 className="text-2xl font-bold text-gray-700 mb-2">最終結果</h2>
+                                <div className="text-5xl font-black my-6">
+                                    <span className={isPassed ? 'text-deep-green' : 'text-red-600'}>
+                                        {correctCount}
+                                    </span>
+                                    <span className="text-gray-400 text-3xl mx-2">/</span>
+                                    <span className="text-gray-600 text-3xl">{questions.length}</span>
+                                </div>
+                                <div className={`inline-block px-8 py-3 rounded-full text-2xl font-bold text-white shadow-md ${isPassed ? 'bg-deep-green' : 'bg-red-500'}`}>
+                                    {isPassed ? '合 格！' : '不 合 格'}
+                                </div>
+                                <p className="mt-4 text-gray-600 font-medium">合格ライン: 16問正解 (80%)</p>
+                                
+                                <button 
+                                    onClick={resetGame}
+                                    className="mt-8 bg-gray-800 text-white font-bold py-3 px-8 rounded-xl shadow hover:bg-gray-700 transition"
+                                >
+                                    もう一度挑戦する
+                                </button>
+                            </div>
+
+                            <h3 className="text-xl font-bold text-gray-800 mb-4 ml-2 border-l-4 border-deep-green pl-3">全問題の解答と解説</h3>
+                            
+                            {/* 各問題のレビューリスト */}
+                            <div className="space-y-6">
+                                {answers.map((ans, idx) => (
+                                    <div key={idx} className={`bg-white p-5 sm:p-6 rounded-xl shadow-sm border-l-8 ${ans.isCorrect ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                                        
+                                        <div className="flex items-start justify-between mb-3">
+                                            <h4 className="font-bold text-lg text-gray-800">{ans.questionTitle}</h4>
+                                            {ans.isCorrect ? (
+                                                <span className="flex items-center text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-sm">
+                                                    <CheckIcon className="w-5 h-5 mr-1" /> 正解
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center text-red-600 font-bold bg-red-50 px-3 py-1 rounded-full text-sm">
+                                                    <XIcon className="w-5 h-5 mr-1" /> 不正解
+                                                </span>
+                                            )}
+                                        </div>
+                                        
+                                        <p className="text-gray-700 mb-5 whitespace-pre-wrap bg-gray-50 p-4 rounded-lg text-sm border">{ans.questionText}</p>
+                                        
+                                        {/* 回答の比較表示 */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                                            <div className={`p-4 rounded-lg border ${ans.isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                                                <div className="text-xs font-bold text-gray-500 mb-1">あなたの回答</div>
+                                                <div className={`text-sm ${ans.isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                                                    {ans.selected}
+                                                </div>
+                                            </div>
+                                            
+                                            {!ans.isCorrect && (
+                                                <div className="p-4 rounded-lg border bg-blue-50 border-blue-200">
+                                                    <div className="text-xs font-bold text-gray-500 mb-1">正解</div>
+                                                    <div className="text-sm text-blue-800">
+                                                        {ans.correct}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* 解説 */}
+                                        <div className="bg-gray-100 p-4 rounded-lg border border-gray-200">
+                                            <div className="flex items-center mb-2">
+                                                <span className="bg-gray-600 text-white text-xs font-bold px-2 py-1 rounded mr-2">解説</span>
+                                            </div>
+                                            <p className="text-gray-700 text-sm leading-relaxed">{ans.explanation}</p>
+                                        </div>
+
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div className="text-center mt-8 pb-12">
+                                <button 
+                                    onClick={resetGame}
+                                    className="bg-deep-green text-white font-bold py-4 px-12 rounded-xl shadow-lg hover:bg-deep-green-light transition"
+                                >
+                                    トップへ戻る
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
